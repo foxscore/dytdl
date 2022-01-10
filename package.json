@@ -1,0 +1,39 @@
+{
+  "name": "@foxscore/dytdl",
+  "version": "1.0.0",
+  "description": "A Discord bot for downloading YouTube videos as MP3/MP4 files",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "youtube-dl",
+    "youtube",
+    "download",
+    "discord",
+    "discord.js",
+    "ffmpeg",
+    "mp4",
+    "mp3"
+  ],
+  "author": {
+    "name": "foxscore",
+    "email": "felixkaiser2000@protonmail.com"
+  },
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/foxscore/dytdl.git"
+  },
+  "engines":
+  {
+    "node" : ">=16.6.0"
+  },
+  "license": "GPL-3.0-or-later",
+  "dependencies": {
+    "discord.js": "^13.5.1",
+    "ms": "^2.1.3",
+    "node-fetch": "^3.1.0",
+    "whatwg-url": "^11.0.0",
+    "youtube-dl-exec": "^2.0.2"
+  }
+}
