@@ -1,16 +1,57 @@
 const {storageLocation, contentHost} = require(`${__dirname}/config.json`)
 const Embeds = require(`${__dirname}/embedGenerator.js`)
 const Meta = require(`${__dirname}/yt-meta`)
-const URL = require('url').URL
 const dl = require('youtube-dl-exec')
-const ms = require('ms')
 const fs = require("fs");
 
 String.prototype.trimEllip = function (length) {
     return this.length > length ? this.substring(0, length) + "..." : this;
 }
 
+const timeFromLoops = (time, loops) => {
+    switch(loops) {
+        case 0:
+            return parseInt(time)
+        case 1:
+            return parseInt(time) * 60
+        default:
+            return parseInt(time) * 3600
+    }
+}
+
+const ytTime = (ytTime) => {
+    let str = ytTime
+        .substring(0, ytTime.length - 1)
+        .slice(2)
+        .toLowerCase()
+    let buffer = ''
+    let time = 0
+    let loops = 0
+    for (var i = str.length - 1; i >= 0; i--) {
+        let char = str.charAt(i)
+        if (isNaN(char)) {
+            time += timeFromLoops(buffer, loops)
+            buffer = ''
+            loops++
+        }
+        else
+            buffer = char + buffer
+    }
+    time += timeFromLoops(buffer, loops)
+    return time
+}
+
 const youtube_parser = (url) => {
+    if (url.length == 11)
+        return url
+
+    if (
+        url.length == 28
+        && url.startsWith('https://youtu.be/')
+        )
+        return url.slice(17)
+
+
     var regExp = /^https?\:\/\/(?:www\.youtube(?:\-nocookie)?\.com\/|m\.youtube\.com\/|music\.youtube\.com\/|youtube\.com\/)?(?:ytscreeningroom\?vi?=|youtu\.be\/|vi?\/|user\/.+\/u\/\w{1,2}\/|embed\/|watch\?(?:.*\&)?vi?=|\&vi?=|\?(?:.*\&)?vi?=)([^#\&\?\n\/<>"']*)/i;
     var match = url.match(regExp);
     return (match && match[1].length==11)? match[1] : false;
@@ -54,14 +95,13 @@ const onInteraction = (interaction) => {
     }
 
     let url = interaction.options.get('url').value
+    let id = youtube_parser(url)
 
-    if (!youtube_parser(url)) {
+    if (!id) {
         sendReject(interaction, 'Request rejected', 'Invalid URL')
         return
     }
 
-    url = new URL(url)
-    let id = url.searchParams.get('v')
     var extension = interaction.commandName === 'mp3' ? 'mp3' : 'mp4'
 
     if (fs.existsSync(`${storageLocation}/${id}.${extension}.meta`)) {
@@ -115,15 +155,10 @@ const onInteraction = (interaction) => {
                         editReject(interaction, 'Request rejected', 'Video is neither public nor unlisted')
                         return
                     }
-                    if (
-                        // If the duration (PT3M52S) is greater than 25 minutes (1500000)
-                        ms(
-                            meta.contentDetails.duration
-                                .slice(2)
-                                .toLowerCase()
-                        ) > 1500000
-                    ) {
-                        editReject(interaction, 'Request rejected', 'Too many responses')
+                    // If the duration (PT1H3M52S) is greater than 25 minutes (1500)
+                    let length = ytTime(meta.contentDetails.duration)
+                    if (length > 1500) {
+                        editReject(interaction, 'Request rejected', `Video too long (${length}s / 1500s)`)
                         return
                     }
 
